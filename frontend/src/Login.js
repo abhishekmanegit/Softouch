@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Paper, Typography, Alert, Box } from '@mui/material';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -28,15 +29,15 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto' }}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <button type="submit" style={{ width: '100%' }}>Login</button>
-      </form>
-      {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
-    </div>
+    <Paper elevation={3} sx={{ maxWidth: 400, margin: '40px auto', p: 3 }}>
+      <Typography variant="h5" gutterBottom>Login</Typography>
+      <Box component="form" onSubmit={handleSubmit}>
+        <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} required fullWidth margin="normal" />
+        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Login</Button>
+      </Box>
+      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+    </Paper>
   );
 }
 

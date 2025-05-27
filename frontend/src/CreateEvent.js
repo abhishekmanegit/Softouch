@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { TextField, Button, Paper, Typography, Alert, Box } from '@mui/material';
 
 function CreateEvent() {
   const [title, setTitle] = useState('');
@@ -14,7 +15,7 @@ function CreateEvent() {
   const { token, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  if (!user) return <div style={{ margin: 40 }}>You must be logged in to create an event.</div>;
+  if (!user) return <Paper elevation={3} sx={{ margin: 4, p: 3 }}>You must be logged in to create an event.</Paper>;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,20 +47,20 @@ function CreateEvent() {
   };
 
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto' }}>
-      <h2>Create Event</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <input type="text" placeholder="Organizer" value={organizer} onChange={e => setOrganizer(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <input type="datetime-local" placeholder="Date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <input type="text" placeholder="Location" value={location} onChange={e => setLocation(e.target.value)} required style={{ width: '100%', marginBottom: 8 }} />
-        <input type="text" placeholder="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
-        <button type="submit" style={{ width: '100%' }}>Create Event</button>
-      </form>
-      {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
-      {success && <div style={{ color: 'green', marginTop: 8 }}>{success}</div>}
-    </div>
+    <Paper elevation={3} sx={{ maxWidth: 500, margin: '40px auto', p: 3 }}>
+      <Typography variant="h5" gutterBottom>Create Event</Typography>
+      <Box component="form" onSubmit={handleSubmit}>
+        <TextField label="Title" value={title} onChange={e => setTitle(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)} required fullWidth margin="normal" multiline rows={3} />
+        <TextField label="Organizer" value={organizer} onChange={e => setOrganizer(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Date" type="datetime-local" value={date} onChange={e => setDate(e.target.value)} required fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
+        <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth margin="normal" />
+        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Create Event</Button>
+      </Box>
+      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
+    </Paper>
   );
 }
 

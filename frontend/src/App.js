@@ -6,42 +6,65 @@ import Signup from './Signup';
 import EventFeed from './EventFeed';
 import CreateEvent from './CreateEvent';
 import Profile from './Profile';
+import { AppBar, Toolbar, Button, Container, Typography, Box } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 function Navbar() {
   const { user, logout } = useContext(AuthContext);
   return (
-    <nav style={{ padding: 16, borderBottom: '1px solid #eee' }}>
-      <Link to="/" style={{ marginRight: 16 }}>Events</Link>
-      {user && <Link to="/create" style={{ marginRight: 16 }}>Create Event</Link>}
-      {user ? (
-        <>
-          <Link to="/profile" style={{ marginRight: 16 }}>Profile</Link>
-          <button onClick={logout} style={{ marginRight: 16 }}>Logout</button>
-        </>
-      ) : (
-        <>
-          <Link to="/login" style={{ marginRight: 16 }}>Login</Link>
-          <Link to="/signup">Sign Up</Link>
-        </>
-      )}
-    </nav>
+    <AppBar position="static" color="primary">
+      <Toolbar>
+        <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}>
+          Softouch
+        </Typography>
+        {user && <Button color="inherit" component={Link} to="/create">Create Event</Button>}
+        {user ? (
+          <>
+            <Button color="inherit" component={Link} to="/profile">Profile</Button>
+            <Button color="inherit" onClick={logout}>Logout</Button>
+          </>
+        ) : (
+          <>
+            <Button color="inherit" component={Link} to="/login">Login</Button>
+            <Button color="inherit" component={Link} to="/signup">Sign Up</Button>
+          </>
+        )}
+      </Toolbar>
+    </AppBar>
   );
 }
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#f50057',
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/create" element={<CreateEvent />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/" element={<EventFeed />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <Router>
+          <Navbar />
+          <Container maxWidth="md" sx={{ mt: 4 }}>
+            <Box sx={{ mt: 4 }}>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/create" element={<CreateEvent />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/" element={<EventFeed />} />
+              </Routes>
+            </Box>
+          </Container>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

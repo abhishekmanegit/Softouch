@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
+import { Card, CardContent, CardActions, Button, Typography, Alert, Grid, Box } from '@mui/material';
 
 function EventFeed() {
   const [events, setEvents] = useState([]);
@@ -49,28 +50,35 @@ function EventFeed() {
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: '40px auto' }}>
-      <h2>Events</h2>
-      {loading && <div>Loading events...</div>}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      {success && <div style={{ color: 'green' }}>{success}</div>}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+    <Box sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>Events</Typography>
+      {loading && <Typography>Loading events...</Typography>}
+      {error && <Alert severity="error">{error}</Alert>}
+      {success && <Alert severity="success">{success}</Alert>}
+      <Grid container spacing={3}>
         {events.map(event => (
-          <li key={event._id} style={{ border: '1px solid #eee', marginBottom: 16, padding: 16 }}>
-            <h3>{event.title}</h3>
-            <div><b>Date:</b> {new Date(event.date).toLocaleString()}</div>
-            <div><b>Location:</b> {event.location}</div>
-            <div><b>Organizer:</b> {event.organizer}</div>
-            <div><b>Skills Required:</b> {event.skillsRequired.join(', ')}</div>
-            {user && (
-              <button onClick={() => handleRegister(event._id)} disabled={registering === event._id}>
-                {registering === event._id ? 'Registering...' : 'Register'}
-              </button>
-            )}
-          </li>
+          <Grid item xs={12} sm={6} key={event._id}>
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>{event.title}</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>{event.description}</Typography>
+                <Typography><b>Date:</b> {new Date(event.date).toLocaleString()}</Typography>
+                <Typography><b>Location:</b> {event.location}</Typography>
+                <Typography><b>Organizer:</b> {event.organizer}</Typography>
+                <Typography><b>Skills Required:</b> {event.skillsRequired.join(', ')}</Typography>
+              </CardContent>
+              <CardActions>
+                {user && (
+                  <Button onClick={() => handleRegister(event._id)} disabled={registering === event._id} variant="contained" size="small">
+                    {registering === event._id ? 'Registering...' : 'Register'}
+                  </Button>
+                )}
+              </CardActions>
+            </Card>
+          </Grid>
         ))}
-      </ul>
-    </div>
+      </Grid>
+    </Box>
   );
 }
 
