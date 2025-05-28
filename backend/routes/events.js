@@ -94,6 +94,28 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Get events created by the logged-in user
+router.get('/my-created', auth, async (req, res) => {
+  try {
+    const createdEvents = await Event.find({ createdBy: req.user.userId }).populate('createdBy', 'name email');
+    res.json(createdEvents);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get events the logged-in user is registered for
+router.get('/my-registered', auth, async (req, res) => {
+  try {
+    const registeredEvents = await Event.find({ 'registeredUsers.userId': req.user.userId }).populate('createdBy', 'name email');
+    res.json(registeredEvents);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Register for Event (now includes registration details)
 router.post('/:id/register', auth, async (req, res) => {
   try {

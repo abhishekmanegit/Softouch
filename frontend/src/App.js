@@ -7,6 +7,7 @@ import EventFeed from './EventFeed';
 import CreateEvent from './CreateEvent';
 import Profile from './Profile';
 import EventDetails from './EventDetails';
+import Dashboard from './Dashboard';
 import { AppBar, Toolbar, Button, Container, Typography, Box } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -19,6 +20,7 @@ function Navbar() {
           Softouch
         </Typography>
         {user && <Button color="inherit" component={Link} to="/create">Create Event</Button>}
+        {user && <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>}
         {user ? (
           <>
             <Button color="inherit" component={Link} to="/profile">Profile</Button>
@@ -60,6 +62,7 @@ function App() {
                 <Route path="/create" element={<CreateEvent />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/events/:id" element={<EventDetails />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/" element={<EventFeed />} />
               </Routes>
             </Box>

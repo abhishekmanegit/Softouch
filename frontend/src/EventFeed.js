@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { Card, CardContent, CardActions, Button, Typography, Alert, Grid, Box, CardMedia, Modal, TextField, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { Link } from 'react-router-dom';
 
 function EventFeed() {
   const [events, setEvents] = useState([]);
@@ -107,7 +108,15 @@ function EventFeed() {
               )}
               <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                 <CardContent sx={{ flex: '1 0 auto' }}>
-                  <Typography variant="h6" gutterBottom>{event.title}</Typography>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    component={Link}
+                    to={`/events/${event._id}`}
+                    sx={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {event.title}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary" gutterBottom>{event.description}</Typography>
                   <Typography variant="body2"><b>Date:</b> {new Date(event.date).toLocaleString()}</Typography>
                   <Typography variant="body2"><b>Location:</b> {event.location}</Typography>
