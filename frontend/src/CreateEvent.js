@@ -10,6 +10,7 @@ function CreateEvent() {
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [skillsRequired, setSkillsRequired] = useState('');
+  const [image, setImage] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { token, user } = useContext(AuthContext);
@@ -22,20 +23,23 @@ function CreateEvent() {
     setError('');
     setSuccess('');
     try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('organizer', organizer);
+      formData.append('date', date);
+      formData.append('location', location);
+      formData.append('skillsRequired', skillsRequired.split(',').map(s => s.trim()).join(','));
+      if (image) {
+        formData.append('image', image);
+      }
+
       const res = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          title,
-          description,
-          organizer,
-          date,
-          location,
-          skillsRequired: skillsRequired.split(',').map(s => s.trim())
-        })
+        body: formData
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Event creation failed');
@@ -49,13 +53,20 @@ function CreateEvent() {
   return (
     <Paper elevation={3} sx={{ maxWidth: 500, margin: '40px auto', p: 3 }}>
       <Typography variant="h5" gutterBottom>Create Event</Typography>
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box component="form" onSubmit={handleSubmit} encType="multipart/form-data">
         <TextField label="Title" value={title} onChange={e => setTitle(e.target.value)} required fullWidth margin="normal" />
         <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)} required fullWidth margin="normal" multiline rows={3} />
         <TextField label="Organizer" value={organizer} onChange={e => setOrganizer(e.target.value)} required fullWidth margin="normal" />
         <TextField label="Date" type="datetime-local" value={date} onChange={e => setDate(e.target.value)} required fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
         <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} required fullWidth margin="normal" />
         <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth margin="normal" />
+        <Box sx={{ mt: 2 }}>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={e => setImage(e.target.files[0])}
+          />
+        </Box>
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Create Event</Button>
       </Box>
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}

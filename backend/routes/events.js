@@ -2,8 +2,30 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const Event = require('../models/Event');
 const User = require('../models/User');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const router = express.Router();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads/events');
+if (!fs.existsSync(uploadsDir)) {
+  fs.existsSync(path.join(__dirname, '../uploads')) || fs.mkdirSync(path.join(__dirname, '../uploads'));
+  fs.mkdirSync(uploadsDir);
+}
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Middleware to verify JWT
 function auth(req, res, next) {
@@ -19,9 +41,11 @@ function auth(req, res, next) {
 }
 
 // Create Event (organizer only)
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     const { title, description, organizer, date, location, skillsRequired } = req.body;
+    const imageUrl = req.file ? `/uploads/events/${req.file.filename}` : null;
+
     const event = new Event({
       title,
       description,
@@ -30,6 +54,7 @@ router.post('/', auth, async (req, res) => {
       location,
       skillsRequired,
       createdBy: req.user.userId,
+      imageUrl
     });
     await event.save();
     res.status(201).json(event);
