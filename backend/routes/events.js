@@ -5,6 +5,7 @@ const User = require('../models/User');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose'); // Import mongoose for ObjectId
 
 const router = express.Router();
 
@@ -43,13 +44,15 @@ function auth(req, res, next) {
 // Create Event (organizer only)
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, organizer, date, location, skillsRequired } = req.body;
+    const { title, description, organizer, organizerEmail, eventImage, date, location, skillsRequired } = req.body;
     const imageUrl = req.file ? `/uploads/events/${req.file.filename}` : null;
 
     const event = new Event({
       title,
       description,
       organizer,
+      organizerEmail,
+      eventImage,
       date,
       location,
       skillsRequired,
@@ -59,6 +62,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     await event.save();
     res.status(201).json(event);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -73,24 +77,83 @@ router.get('/', async (req, res) => {
     const events = await Event.find(filter).populate('createdBy', 'name email');
     res.json(events);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Register for Event
+// Get a single event by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id).populate('createdBy', 'name email').populate('registeredUsers.userId', 'name email');
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    res.json(event);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Register for Event (now includes registration details)
 router.post('/:id/register', auth, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
-    if (event.registeredUsers.includes(req.user.userId)) {
-      return res.status(400).json({ message: 'Already registered' });
+
+    // Check if user is already registered (any status)
+    const alreadyRegistered = event.registeredUsers.some(
+      (reg) => reg.userId.toString() === req.user.userId
+    );
+    if (alreadyRegistered) {
+      return res.status(400).json({ message: 'Already registered for this event' });
     }
-    event.registeredUsers.push(req.user.userId);
+
+    const { contact } = req.body; // Get registration details from request body
+
+    event.registeredUsers.push({
+      userId: new mongoose.Types.ObjectId(req.user.userId), // Ensure userId is ObjectId
+      status: 'pending', // Default to pending
+      registrationDetails: { contact },
+    });
+
     await event.save();
-    res.json({ message: 'Registered successfully' });
+    res.json({ message: 'Registered successfully! Awaiting organizer approval.' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Update Registration Status (Organizer Only)
+router.put('/:eventId/registrations/:registrationId/status', auth, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Check if the logged-in user is the event creator
+    if (event.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to update this registration status' });
+    }
+
+    const registration = event.registeredUsers.id(req.params.registrationId);
+    if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
+    const { status } = req.body;
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status provided' });
+    }
+
+    registration.status = status;
+    await event.save();
+
+    res.json({ message: 'Registration status updated successfully', registration });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// TODO: Add endpoint for organizers to approve/reject registrations
 
 module.exports = router; 

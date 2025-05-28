@@ -6,6 +6,7 @@ import Signup from './Signup';
 import EventFeed from './EventFeed';
 import CreateEvent from './CreateEvent';
 import Profile from './Profile';
+import EventDetails from './EventDetails';
 import { AppBar, Toolbar, Button, Container, Typography, Box } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -58,6 +59,7 @@ function App() {
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/create" element={<CreateEvent />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/" element={<EventFeed />} />
               </Routes>
             </Box>

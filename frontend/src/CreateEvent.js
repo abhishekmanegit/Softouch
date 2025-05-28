@@ -7,6 +7,8 @@ function CreateEvent() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [organizer, setOrganizer] = useState('');
+  const [organizerEmail, setOrganizerEmail] = useState('');
+  const [eventImage, setEventImage] = useState('');
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [skillsRequired, setSkillsRequired] = useState('');
@@ -33,6 +35,8 @@ function CreateEvent() {
       if (image) {
         formData.append('image', image);
       }
+      formData.append('organizerEmail', organizerEmail);
+      formData.append('eventImage', eventImage);
 
       const res = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
@@ -57,6 +61,8 @@ function CreateEvent() {
         <TextField label="Title" value={title} onChange={e => setTitle(e.target.value)} required fullWidth margin="normal" />
         <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)} required fullWidth margin="normal" multiline rows={3} />
         <TextField label="Organizer" value={organizer} onChange={e => setOrganizer(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Organizer Email" type="email" value={organizerEmail} onChange={e => setOrganizerEmail(e.target.value)} required fullWidth margin="normal" />
+        <TextField label="Event Image URL" type="url" value={eventImage} onChange={e => setEventImage(e.target.value)} fullWidth margin="normal" />
         <TextField label="Date" type="datetime-local" value={date} onChange={e => setDate(e.target.value)} required fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
         <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} required fullWidth margin="normal" />
         <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth margin="normal" />
