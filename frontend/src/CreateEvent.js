@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Typography, Alert, Box } from '@mui/material';
+import { TextField, Button, Paper, Typography, Alert, Box, Grid } from '@mui/material';
 
 function CreateEvent() {
   const [title, setTitle] = useState('');
@@ -55,17 +55,37 @@ function CreateEvent() {
   };
 
   return (
-    <Paper elevation={3} sx={{ maxWidth: 500, margin: '40px auto', p: 3 }}>
-      <Typography variant="h5" gutterBottom>Create Event</Typography>
+    <Paper elevation={3} sx={{ maxWidth: 600, margin: '40px auto', p: 4 }}>
+      <Typography variant="h5" component="h1" gutterBottom align="center">
+        Create New Event
+      </Typography>
       <Box component="form" onSubmit={handleSubmit} encType="multipart/form-data">
-        <TextField label="Title" value={title} onChange={e => setTitle(e.target.value)} required fullWidth margin="normal" />
-        <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)} required fullWidth margin="normal" multiline rows={3} />
-        <TextField label="Organizer" value={organizer} onChange={e => setOrganizer(e.target.value)} required fullWidth margin="normal" />
-        <TextField label="Organizer Email" type="email" value={organizerEmail} onChange={e => setOrganizerEmail(e.target.value)} required fullWidth margin="normal" />
-        <TextField label="Event Image URL" type="url" value={eventImage} onChange={e => setEventImage(e.target.value)} fullWidth margin="normal" />
-        <TextField label="Date" type="datetime-local" value={date} onChange={e => setDate(e.target.value)} required fullWidth margin="normal" InputLabelProps={{ shrink: true }} />
-        <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} required fullWidth margin="normal" />
-        <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth margin="normal" />
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField label="Event Title" value={title} onChange={e => setTitle(e.target.value)} required fullWidth />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Description" value={description} onChange={e => setDescription(e.target.value)} required fullWidth multiline rows={4} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Organizer Name" value={organizer} onChange={e => setOrganizer(e.target.value)} required fullWidth />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Organizer Email" type="email" value={organizerEmail} onChange={e => setOrganizerEmail(e.target.value)} required fullWidth />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Event Image URL" type="url" value={eventImage} onChange={e => setEventImage(e.target.value)} fullWidth helperText="Link to an image for the event thumbnail" />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Date & Time" type="datetime-local" value={date} onChange={e => setDate(e.target.value)} required fullWidth InputLabelProps={{ shrink: true }} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} required fullWidth />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth helperText="e.g., React, Node.js, MongoDB" />
+          </Grid>
+        </Grid>
         <Box sx={{ mt: 2 }}>
           <input
             type="file"
@@ -73,7 +93,9 @@ function CreateEvent() {
             onChange={e => setImage(e.target.files[0])}
           />
         </Box>
-        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Create Event</Button>
+        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 3 }}>
+          Create Event
+        </Button>
       </Box>
       {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
