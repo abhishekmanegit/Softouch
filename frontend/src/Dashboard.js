@@ -111,7 +111,17 @@ function Dashboard() {
                     <ListItem disablePadding component={Link} to={`/events/${event._id}`} sx={{ textDecoration: 'none', color: 'inherit' }}>
                       <ListItemText
                          primary={<Typography variant="body1"><b>{event.title}</b> by {event.organizer}</Typography>}
-                         secondary={`Date: ${new Date(event.date).toLocaleDateString()}`}
+                         secondary={
+                           <>
+                             <Typography variant="body2" color="text.secondary">Date: {new Date(event.date).toLocaleDateString()}</Typography>
+                             {user && event.registeredUsers && event.registeredUsers.map(reg => reg.userId._id === user.id ? (
+                               <Typography variant="body2" color="text.secondary" key={reg._id}>
+                                 Status: {reg.status === 'approved' ? 'Approved' : reg.status === 'pending' ? 'Pending' : 'Rejected'}
+                                 {reg.status === 'approved' && ` | Checked In: ${reg.checkedIn ? 'Yes' : 'No'}`}
+                               </Typography>
+                             ) : null)}
+                           </>
+                         }
                       />
                     </ListItem>
                   </Paper>
