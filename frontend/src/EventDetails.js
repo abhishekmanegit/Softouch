@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
-import { Typography, Box, CircularProgress, List, ListItem, ListItemText, Button, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Typography, Box, CircularProgress, List, ListItem, ListItemText, Button, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Avatar } from '@mui/material';
 import { SnackbarContext } from './SnackbarContext';
 
 function EventDetails() {
@@ -16,8 +16,12 @@ function EventDetails() {
   const [openReminderModal, setOpenReminderModal] = useState(false);
   const [selectedReminderDate, setSelectedReminderDate] = useState('');
 
+  const [messages, setMessages] = useState([]); // State for chat messages
+  const [messageInput, setMessageInput] = useState(''); // State for new message input
+  const messagesEndRef = useRef(null); // Ref for scrolling to the bottom of messages
+
   useEffect(() => {
-    async function fetchEventAndReminder() {
+    async function fetchEventAndRelatedData() {
       setLoading(true);
       try {
         // Fetch Event details
@@ -44,6 +48,15 @@ function EventDetails() {
               setSelectedReminderDate('');
             }
           }
+
+          // Fetch messages for this event
+          const messagesRes = await fetch(`http://localhost:5000/api/messages/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const messagesData = await messagesRes.json();
+          if (messagesRes.ok) {
+            setMessages(messagesData);
+          }
         }
 
       } catch (err) {
@@ -53,9 +66,13 @@ function EventDetails() {
       }
     }
     if (id) {
-      fetchEventAndReminder();
+      fetchEventAndRelatedData();
     }
   }, [id, user, token, showSnackbar]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleUpdateStatus = async (registrationId, status) => {
     if (!user || !event || event.createdBy._id !== user.id) {
@@ -157,10 +174,45 @@ function EventDetails() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!user || !token) {
+      showSnackbar('You must be logged in to send messages.', 'warning');
+      return;
+    }
+    if (!messageInput.trim()) {
+      showSnackbar('Message cannot be empty.', 'warning');
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/messages/${event._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: messageInput }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send message');
+
+      // Add the new message to the state, including populated user info (if backend returns it)
+      // For now, we'll assume the backend sends back the raw message without populated user data.
+      // A re-fetch of messages is a safer approach for real-time updates if user data is needed.
+      setMessages(prevMessages => [...prevMessages, { ...data, user: { _id: user.id, name: user.name, profilePicture: user.profilePicture } }]);
+      setMessageInput('');
+      showSnackbar('Message sent!', 'success');
+    } catch (err) {
+      showSnackbar(err.message, 'error');
+    }
+  };
+
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
   if (!event) return <Typography variant="h6" sx={{ mt: 4 }}>Event not found.</Typography>;
 
   const isOrganizer = user && event.createdBy && event.createdBy._id === user.id;
+  const isRegistered = user && event.registeredUsers.some(reg => reg.userId._id.toString() === user.id);
 
   // Convert event date to a format suitable for datetime-local input
   const eventDateForInput = new Date(event.date).toISOString().slice(0, 16);
@@ -243,6 +295,47 @@ function EventDetails() {
               ))}
             </List>
           )}
+        </Box>
+      )}
+
+      {/* Chat Section (visible only if user is logged in) */}
+      {user && isRegistered && (
+        <Box sx={{ mt: 4, borderTop: '1px solid #eee', pt: 3 }}>
+          <Typography variant="h5" gutterBottom>Event Chat</Typography>
+          <Box sx={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #ddd', p: 2, borderRadius: '4px' }}>
+            {messages.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">No messages yet. Be the first to say something!</Typography>
+            ) : (
+              messages.map((msg, index) => (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', mb: 1.5 }}>
+                  <Avatar src={msg.user?.profilePicture} sx={{ width: 30, height: 30, mr: 1 }} />
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>{msg.user?.name}</Typography>
+                    <Typography variant="body2">{msg.text}</Typography>
+                    <Typography variant="caption" color="text.secondary">{new Date(msg.date).toLocaleString()}</Typography>
+                  </Box>
+                </Box>
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </Box>
+          <Box sx={{ display: 'flex', mt: 2, gap: 1 }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              placeholder="Type your message..."
+              value={messageInput}
+              onChange={e => setMessageInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Button variant="contained" onClick={handleSendMessage} disabled={!messageInput.trim()}>Send</Button>
+          </Box>
         </Box>
       )}
 

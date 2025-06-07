@@ -8,6 +8,7 @@ const eventsRoutes = require('./routes/events');
 const connectionRoutes = require('./routes/connections');
 const postsRoutes = require('./routes/posts');
 const reminderRoutes = require('./routes/reminders');
+const messageRoutes = require('./routes/messages');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check route
 app.get('/', (req, res) => {
