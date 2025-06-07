@@ -9,7 +9,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [createdEvents, setCreatedEvents] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
-  const [tab, setTab] = useState(0); // 0 for Created, 1 for Registered
+  const [upcomingReminders, setUpcomingReminders] = useState([]);
+  const [tab, setTab] = useState(0); // 0 for Created, 1 for Registered, 2 for Reminders
   const { showSnackbar } = useContext(SnackbarContext);
 
   useEffect(() => {
@@ -38,6 +39,14 @@ function Dashboard() {
         if (!registeredRes.ok) throw new Error(registeredData.message || 'Failed to fetch registered events');
         setRegisteredEvents(registeredData);
 
+        // Fetch Upcoming Reminders
+        const remindersRes = await fetch('http://localhost:5000/api/reminders/my', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const remindersData = await remindersRes.json();
+        if (!remindersRes.ok) throw new Error(remindersData.message || 'Failed to fetch reminders');
+        setUpcomingReminders(remindersData);
+
       } catch (err) {
         showSnackbar(err.message, 'error');
       } finally {
@@ -64,6 +73,7 @@ function Dashboard() {
       <Tabs value={tab} onChange={handleTabChange} aria-label="dashboard tabs">
         <Tab label={`Created Events (${createdEvents.length})`} />
         <Tab label={`Registered Events (${registeredEvents.length})`} />
+        <Tab label={`Upcoming Reminders (${upcomingReminders.length})`} />
       </Tabs>
 
       <Box sx={{ mt: 3 }}>
@@ -102,6 +112,28 @@ function Dashboard() {
                       <ListItemText
                          primary={<Typography variant="body1"><b>{event.title}</b> by {event.organizer}</Typography>}
                          secondary={`Date: ${new Date(event.date).toLocaleDateString()}`}
+                      />
+                    </ListItem>
+                  </Paper>
+                ))}
+              </List>
+            )}
+          </>
+        )}
+
+        {tab === 2 && (
+          <>
+            <Typography variant="h6" gutterBottom>Upcoming Reminders</Typography>
+            {upcomingReminders.length === 0 ? (
+              <Typography>You have no upcoming event reminders.</Typography>
+            ) : (
+              <List>
+                {upcomingReminders.map(reminder => (
+                  <Paper key={reminder._id} sx={{ mb: 2, p: 2 }}>
+                    <ListItem disablePadding component={Link} to={`/events/${reminder.event._id}`} sx={{ textDecoration: 'none', color: 'inherit' }}>
+                      <ListItemText
+                        primary={<Typography variant="body1"><b>{reminder.event.title}</b> by {reminder.event.organizer}</Typography>}
+                        secondary={`Event Date: ${new Date(reminder.event.date).toLocaleDateString()} | Reminder Set For: ${new Date(reminder.reminderDate).toLocaleString()}`}
                       />
                     </ListItem>
                   </Paper>

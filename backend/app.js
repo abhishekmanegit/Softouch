@@ -6,6 +6,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const eventsRoutes = require('./routes/events');
 const connectionRoutes = require('./routes/connections');
+const postsRoutes = require('./routes/posts');
+const reminderRoutes = require('./routes/reminders');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +29,8 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/connections', connectionRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 // Health check route
 app.get('/', (req, res) => {

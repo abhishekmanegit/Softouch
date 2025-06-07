@@ -10,6 +10,8 @@ import Profile from './Profile';
 import EventDetails from './EventDetails';
 import Dashboard from './Dashboard';
 import Connections from './Connections';
+import CreatePost from './CreatePost';
+import PostFeed from './PostFeed';
 import { AppBar, Toolbar, Button, Container, Typography, Box } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -22,6 +24,7 @@ function Navbar() {
           Softouch
         </Typography>
         {user && <Button color="inherit" component={Link} to="/create">Create Event</Button>}
+        {user && <Button color="inherit" component={Link} to="/create-post">Create Post</Button>}
         {user && <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>}
         {user && <Button color="inherit" component={Link} to="/connections">My Network</Button>}
         {user ? (
@@ -63,12 +66,13 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/create" element={<CreateEvent />} />
+                <Route path="/create-post" element={<CreatePost />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/connections" element={<Connections />} />
-                <Route path="/" element={<EventFeed />} />
+                <Route path="/" element={<PostFeed />} />
               </Routes>
             </Container>
           </Router>
