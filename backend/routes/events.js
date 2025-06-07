@@ -44,7 +44,7 @@ function auth(req, res, next) {
 // Create Event (organizer only)
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, organizer, organizerEmail, eventImage, date, location, skillsRequired } = req.body;
+    const { title, description, organizer, organizerEmail, eventImage, date, location, skillsRequired, categories } = req.body;
     const imageUrl = req.file ? `/uploads/events/${req.file.filename}` : null;
 
     const event = new Event({
@@ -56,6 +56,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       date,
       location,
       skillsRequired,
+      categories,
       createdBy: req.user.userId,
       imageUrl
     });
@@ -67,10 +68,10 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   }
 });
 
-// List Events (with optional filters: skills, location, search query)
+// List Events (with optional filters: skills, location, search query, categories)
 router.get('/', async (req, res) => {
   try {
-    const { skills, location, search, startDate, endDate, sortBy } = req.query;
+    const { skills, location, search, startDate, endDate, sortBy, categories } = req.query;
     let filter = {};
     let sort = { date: -1 }; // Default sort by date descending
 
@@ -79,6 +80,9 @@ router.get('/', async (req, res) => {
     }
     if (location) {
       filter.location = new RegExp(location, 'i');
+    }
+    if (categories) {
+      filter.categories = { $in: categories.split(',').map(c => new RegExp(c.trim(), 'i')) };
     }
     if (search) {
       const searchRegex = new RegExp(search, 'i');

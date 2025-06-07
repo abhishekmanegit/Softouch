@@ -20,6 +20,7 @@ const eventSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   location: { type: String, required: true },
   skillsRequired: [{ type: String }],
+  categories: [{ type: String }],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   registeredUsers: [registrationSchema],
 }, { timestamps: true });

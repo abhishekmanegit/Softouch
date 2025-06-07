@@ -1,8 +1,36 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Typography, Box, Grid } from '@mui/material';
+import { TextField, Button, Paper, Typography, Box, Grid, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip } from '@mui/material';
 import { SnackbarContext } from './SnackbarContext';
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+const eventCategories = [
+  'Webinar',
+  'Workshop',
+  'Conference',
+  'Hackathon',
+  'Networking Event',
+  'Seminar',
+  'Meetup',
+  'Bootcamp',
+  'Panel Discussion',
+  'Product Launch',
+  'Exhibition',
+  'Job Fair',
+  'Competition',
+  'Training'
+];
 
 function CreateEvent() {
   const [title, setTitle] = useState('');
@@ -13,6 +41,7 @@ function CreateEvent() {
   const [date, setDate] = useState('');
   const [location, setLocation] = useState('');
   const [skillsRequired, setSkillsRequired] = useState('');
+  const [categories, setCategories] = useState([]);
   const [image, setImage] = useState(null);
   const { token, user } = useContext(AuthContext);
   const { showSnackbar } = useContext(SnackbarContext);
@@ -30,6 +59,7 @@ function CreateEvent() {
       formData.append('date', date);
       formData.append('location', location);
       formData.append('skillsRequired', skillsRequired.split(',').map(s => s.trim()).join(','));
+      formData.append('categories', categories.join(','));
       if (image) {
         formData.append('image', image);
       }
@@ -82,6 +112,33 @@ function CreateEvent() {
           </Grid>
           <Grid item xs={12}>
             <TextField label="Skills Required (comma separated)" value={skillsRequired} onChange={e => setSkillsRequired(e.target.value)} fullWidth helperText="e.g., React, Node.js, MongoDB" />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel id="categories-label">Categories</InputLabel>
+              <Select
+                labelId="categories-label"
+                id="categories"
+                multiple
+                value={categories}
+                onChange={(event) => setCategories(event.target.value)}
+                input={<OutlinedInput id="select-multiple-chip" label="Categories" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((value) => (
+                      <Chip key={value} label={value} />
+                    ))}
+                  </Box>
+                )}
+                MenuProps={MenuProps}
+              >
+                {eventCategories.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
         <Box sx={{ mt: 2 }}>

@@ -1,9 +1,37 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
-import { Card, CardContent, CardActions, Button, Typography, Grid, Box, CardMedia, Modal, TextField, IconButton, CircularProgress, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Card, CardContent, CardActions, Button, Typography, Grid, Box, CardMedia, Modal, TextField, IconButton, CircularProgress, MenuItem, Select, InputLabel, FormControl, OutlinedInput, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
 import { SnackbarContext } from './SnackbarContext';
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+const eventCategories = [
+  'Webinar',
+  'Workshop',
+  'Conference',
+  'Hackathon',
+  'Networking Event',
+  'Seminar',
+  'Meetup',
+  'Bootcamp',
+  'Panel Discussion',
+  'Product Launch',
+  'Exhibition',
+  'Job Fair',
+  'Competition',
+  'Training'
+];
 
 function EventFeed() {
   const [events, setEvents] = useState([]);
@@ -24,6 +52,7 @@ function EventFeed() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('dateDesc'); // Default sort
+  const [filterCategories, setFilterCategories] = useState([]); // New state for categories
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -35,6 +64,7 @@ function EventFeed() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       if (sortBy) params.append('sortBy', sortBy);
+      if (filterCategories.length > 0) params.append('categories', filterCategories.join(','));
 
       const queryString = params.toString();
       const url = `http://localhost:5000/api/events${queryString ? `?${queryString}` : ''}`;
@@ -165,6 +195,31 @@ function EventFeed() {
           >
             <MenuItem value="dateDesc">Date (Newest First)</MenuItem>
             <MenuItem value="dateAsc">Date (Oldest First)</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl variant="outlined" size="small" sx={{ flexGrow: 1, minWidth: '150px' }}>
+          <InputLabel id="filter-categories-label">Categories</InputLabel>
+          <Select
+            labelId="filter-categories-label"
+            id="filter-categories"
+            multiple
+            value={filterCategories}
+            onChange={(event) => setFilterCategories(event.target.value)}
+            input={<OutlinedInput id="select-filter-chip" label="Categories" />}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={value} />
+                ))}
+              </Box>
+            )}
+            MenuProps={MenuProps}
+          >
+            {eventCategories.map((category) => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
         <Button variant="contained" onClick={handleSearchFilter}>Filter Events</Button>
