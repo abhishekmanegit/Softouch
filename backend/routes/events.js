@@ -70,24 +70,54 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 // List Events (with optional filters: skills, location, search query)
 router.get('/', async (req, res) => {
   try {
-    const { skills, location, search } = req.query;
+    const { skills, location, search, startDate, endDate, sortBy } = req.query;
     let filter = {};
+    let sort = { date: -1 }; // Default sort by date descending
 
     if (skills) {
       filter.skillsRequired = { $in: skills.split(',').map(s => new RegExp(s.trim(), 'i')) };
     }
     if (location) {
-      filter.location = new RegExp(location, 'i'); // Case-insensitive location search
+      filter.location = new RegExp(location, 'i');
     }
     if (search) {
-      const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+      const searchRegex = new RegExp(search, 'i');
       filter.$or = [
         { title: searchRegex },
         { description: searchRegex }
       ];
     }
 
-    const events = await Event.find(filter).populate('createdBy', 'name email');
+    // Date range filtering
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) {
+        filter.date.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.date.$lte = new Date(endDate);
+      }
+    }
+
+    // Sorting options
+    if (sortBy) {
+      switch (sortBy) {
+        case 'dateAsc':
+          sort = { date: 1 };
+          break;
+        case 'dateDesc':
+          sort = { date: -1 };
+          break;
+        // Add more sorting options like 'popularity' if a relevant field is added to Event model
+        // case 'popularity':
+        //   sort = { registeredUsers: -1 }; // Example: sort by number of registered users
+        //   break;
+        default:
+          sort = { date: -1 };
+      }
+    }
+
+    const events = await Event.find(filter).sort(sort).populate('createdBy', 'name email');
     res.json(events);
   } catch (err) {
     console.error(err);

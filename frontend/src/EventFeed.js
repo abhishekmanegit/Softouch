@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
-import { Card, CardContent, CardActions, Button, Typography, Grid, Box, CardMedia, Modal, TextField, IconButton, CircularProgress } from '@mui/material';
+import { Card, CardContent, CardActions, Button, Typography, Grid, Box, CardMedia, Modal, TextField, IconButton, CircularProgress, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
 import { SnackbarContext } from './SnackbarContext';
@@ -21,6 +21,9 @@ function EventFeed() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSkills, setFilterSkills] = useState('');
   const [filterLocation, setFilterLocation] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState('dateDesc'); // Default sort
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -29,6 +32,9 @@ function EventFeed() {
       if (searchQuery) params.append('search', searchQuery);
       if (filterSkills) params.append('skills', filterSkills);
       if (filterLocation) params.append('location', filterLocation);
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      if (sortBy) params.append('sortBy', sortBy);
 
       const queryString = params.toString();
       const url = `http://localhost:5000/api/events${queryString ? `?${queryString}` : ''}`;
@@ -130,6 +136,37 @@ function EventFeed() {
           onChange={e => setFilterLocation(e.target.value)}
           sx={{ flexGrow: 1, minWidth: '150px' }}
         />
+        <TextField
+          label="Start Date"
+          type="date"
+          variant="outlined"
+          size="small"
+          value={startDate}
+          onChange={e => setStartDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          sx={{ flexGrow: 1, minWidth: '150px' }}
+        />
+        <TextField
+          label="End Date"
+          type="date"
+          variant="outlined"
+          size="small"
+          value={endDate}
+          onChange={e => setEndDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          sx={{ flexGrow: 1, minWidth: '150px' }}
+        />
+        <FormControl variant="outlined" size="small" sx={{ flexGrow: 1, minWidth: '150px' }}>
+          <InputLabel>Sort By</InputLabel>
+          <Select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            label="Sort By"
+          >
+            <MenuItem value="dateDesc">Date (Newest First)</MenuItem>
+            <MenuItem value="dateAsc">Date (Oldest First)</MenuItem>
+          </Select>
+        </FormControl>
         <Button variant="contained" onClick={handleSearchFilter}>Filter Events</Button>
       </Box>
 
@@ -204,7 +241,6 @@ function EventFeed() {
               margin="normal"
               required
             />
-            {/* Add more fields here if needed */}
             <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={registering !== null}>
               Submit Registration
             </Button>
