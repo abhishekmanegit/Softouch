@@ -1,10 +1,17 @@
 import React, { useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { Paper, Typography, Box } from '@mui/material';
+import { SnackbarContext } from './SnackbarContext';
 
 function Profile() {
   const { user } = useContext(AuthContext);
-  if (!user) return <Paper elevation={3} sx={{ margin: 4, p: 3 }}>You are not logged in.</Paper>;
+  const { showSnackbar } = useContext(SnackbarContext);
+
+  if (!user) {
+    showSnackbar('You are not logged in.', 'info');
+    return <Typography variant="h6" sx={{ mt: 4 }}>You are not logged in.</Typography>;
+  }
+
   return (
     <Paper elevation={3} sx={{ maxWidth: 400, margin: '40px auto', p: 3 }}>
       <Typography variant="h5" gutterBottom>Profile</Typography>

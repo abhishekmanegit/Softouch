@@ -1,18 +1,18 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Typography, Alert, Box } from '@mui/material';
+import { TextField, Button, Paper, Typography, Box } from '@mui/material';
+import { SnackbarContext } from './SnackbarContext';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const { login } = useContext(AuthContext);
+  const { showSnackbar } = useContext(SnackbarContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
@@ -22,9 +22,10 @@ function Login() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
       login(data.user, data.token);
+      showSnackbar('Login successful!', 'success');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      showSnackbar(err.message, 'error');
     }
   };
 
@@ -36,7 +37,6 @@ function Login() {
         <TextField label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} required fullWidth margin="normal" />
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Login</Button>
       </Box>
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
     </Paper>
   );
 }

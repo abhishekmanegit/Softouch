@@ -1,26 +1,26 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
-import { Typography, Box, CircularProgress, Alert, Paper, List, ListItem, ListItemText, Tabs, Tab } from '@mui/material';
+import { Typography, Box, CircularProgress, Paper, List, ListItem, ListItemText, Tabs, Tab } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { SnackbarContext } from './SnackbarContext';
 
 function Dashboard() {
   const { user, token } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [createdEvents, setCreatedEvents] = useState([]);
   const [registeredEvents, setRegisteredEvents] = useState([]);
   const [tab, setTab] = useState(0); // 0 for Created, 1 for Registered
+  const { showSnackbar } = useContext(SnackbarContext);
 
   useEffect(() => {
     if (!user || !token) {
       setLoading(false);
-      setError('You must be logged in to view the dashboard.');
+      showSnackbar('You must be logged in to view the dashboard.', 'info');
       return;
     }
 
     async function fetchData() {
       setLoading(true);
-      setError('');
       try {
         // Fetch Created Events
         const createdRes = await fetch('http://localhost:5000/api/events/my-created', {
@@ -39,7 +39,7 @@ function Dashboard() {
         setRegisteredEvents(registeredData);
 
       } catch (err) {
-        setError(err.message);
+        showSnackbar(err.message, 'error');
       } finally {
         setLoading(false);
       }
@@ -47,16 +47,15 @@ function Dashboard() {
 
     fetchData();
 
-  }, [user, token]); // Refetch when user or token changes
+  }, [user, token, showSnackbar]);
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
   };
 
-  if (!user) return <Alert severity="info" sx={{ mt: 4 }}>You must be logged in to view the dashboard.</Alert>;
+  if (!user) return <Typography variant="h6" sx={{ mt: 4 }}>You must be logged in to view the dashboard.</Typography>;
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
-  if (error) return <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>;
 
   return (
     <Box sx={{ mt: 4 }}>

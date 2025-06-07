@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Typography, Alert, Box, Grid } from '@mui/material';
+import { TextField, Button, Paper, Typography, Box, Grid } from '@mui/material';
+import { SnackbarContext } from './SnackbarContext';
 
 function CreateEvent() {
   const [title, setTitle] = useState('');
@@ -13,17 +14,14 @@ function CreateEvent() {
   const [location, setLocation] = useState('');
   const [skillsRequired, setSkillsRequired] = useState('');
   const [image, setImage] = useState(null);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const { token, user } = useContext(AuthContext);
+  const { showSnackbar } = useContext(SnackbarContext);
   const navigate = useNavigate();
 
   if (!user) return <Paper elevation={3} sx={{ margin: 4, p: 3 }}>You must be logged in to create an event.</Paper>;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     try {
       const formData = new FormData();
       formData.append('title', title);
@@ -47,10 +45,10 @@ function CreateEvent() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Event creation failed');
-      setSuccess('Event created!');
+      showSnackbar('Event created successfully!', 'success');
       setTimeout(() => navigate('/'), 1000);
     } catch (err) {
-      setError(err.message);
+      showSnackbar(err.message, 'error');
     }
   };
 
@@ -97,8 +95,6 @@ function CreateEvent() {
           Create Event
         </Button>
       </Box>
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
     </Paper>
   );
 }

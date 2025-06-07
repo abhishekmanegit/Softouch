@@ -67,13 +67,26 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
   }
 });
 
-// List Events (with optional filters)
+// List Events (with optional filters: skills, location, search query)
 router.get('/', async (req, res) => {
   try {
-    const { skills, location } = req.query;
+    const { skills, location, search } = req.query;
     let filter = {};
-    if (skills) filter.skillsRequired = { $in: skills.split(',') };
-    if (location) filter.location = location;
+
+    if (skills) {
+      filter.skillsRequired = { $in: skills.split(',').map(s => new RegExp(s.trim(), 'i')) };
+    }
+    if (location) {
+      filter.location = new RegExp(location, 'i'); // Case-insensitive location search
+    }
+    if (search) {
+      const searchRegex = new RegExp(search, 'i'); // Case-insensitive search
+      filter.$or = [
+        { title: searchRegex },
+        { description: searchRegex }
+      ];
+    }
+
     const events = await Event.find(filter).populate('createdBy', 'name email');
     res.json(events);
   } catch (err) {

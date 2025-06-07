@@ -1,55 +1,70 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
-import { Card, CardContent, CardActions, Button, Typography, Alert, Grid, Box, CardMedia, Modal, TextField, IconButton } from '@mui/material';
+import { Card, CardContent, CardActions, Button, Typography, Grid, Box, CardMedia, Modal, TextField, IconButton, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
+import { SnackbarContext } from './SnackbarContext';
 
 function EventFeed() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { user, token } = useContext(AuthContext);
+  const { showSnackbar } = useContext(SnackbarContext);
   const [registering, setRegistering] = useState(null);
-  const [success, setSuccess] = useState('');
   const [openRegistrationModal, setOpenRegistrationModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registrationFormData, setRegistrationFormData] = useState({
     contact: '',
   });
 
-  useEffect(() => {
-    async function fetchEvents() {
-      setLoading(true);
-      setError('');
-      try {
-        const res = await fetch('http://localhost:5000/api/events');
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to fetch events');
-        setEvents(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  // State for filters and search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSkills, setFilterSkills] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('search', searchQuery);
+      if (filterSkills) params.append('skills', filterSkills);
+      if (filterLocation) params.append('location', filterLocation);
+
+      const queryString = params.toString();
+      const url = `http://localhost:5000/api/events${queryString ? `?${queryString}` : ''}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch events');
+      setEvents(data);
+    } catch (err) {
+      showSnackbar(err.message, 'error');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [showSnackbar]);
+
+  const handleSearchFilter = () => {
+    fetchEvents();
+  };
 
   const handleOpenRegistrationModal = (event) => {
     if (!user) {
-      setError('You must be logged in to register.');
+      showSnackbar('You must be logged in to register.', 'warning');
       return;
     }
     setSelectedEvent(event);
     setOpenRegistrationModal(true);
-    setRegistrationFormData({ contact: '' }); // Reset form data
+    setRegistrationFormData({ contact: '' });
   };
 
   const handleCloseRegistrationModal = () => {
     setOpenRegistrationModal(false);
     setSelectedEvent(null);
-    setError(''); // Clear errors on modal close
-    setSuccess(''); // Clear success on modal close
   };
 
   const handleRegistrationFormChange = (e) => {
@@ -59,10 +74,8 @@ function EventFeed() {
 
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     if (!selectedEvent) return;
-    setRegistering(selectedEvent._id); // Indicate registration is in progress for this event
+    setRegistering(selectedEvent._id);
 
     try {
       const res = await fetch(`http://localhost:5000/api/events/${selectedEvent._id}/register`, {
@@ -71,18 +84,17 @@ function EventFeed() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(registrationFormData), // Send form data
+        body: JSON.stringify(registrationFormData),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-      setSuccess('Registered successfully! Awaiting organizer approval.');
-      handleCloseRegistrationModal(); // Close modal on success
-      // Optionally refresh events or update the specific event in the list
+      showSnackbar('Registered successfully! Awaiting organizer approval.', 'success');
+      handleCloseRegistrationModal();
 
     } catch (err) {
-      setError(err.message);
+      showSnackbar(err.message, 'error');
     } finally {
       setRegistering(null);
     }
@@ -91,9 +103,40 @@ function EventFeed() {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>Events</Typography>
-      {loading && <Typography>Loading events...</Typography>}
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
+
+      {/* Search and Filter Inputs */}
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <TextField
+          label="Search by Title/Description"
+          variant="outlined"
+          size="small"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          sx={{ flexGrow: 1, minWidth: '200px' }}
+        />
+        <TextField
+          label="Skills (comma separated)"
+          variant="outlined"
+          size="small"
+          value={filterSkills}
+          onChange={e => setFilterSkills(e.target.value)}
+          sx={{ flexGrow: 1, minWidth: '150px' }}
+        />
+        <TextField
+          label="Location"
+          variant="outlined"
+          size="small"
+          value={filterLocation}
+          onChange={e => setFilterLocation(e.target.value)}
+          sx={{ flexGrow: 1, minWidth: '150px' }}
+        />
+        <Button variant="contained" onClick={handleSearchFilter}>Filter Events</Button>
+      </Box>
+
+      {loading && <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>}
+      {events.length === 0 && !loading && (
+        <Typography variant="h6" sx={{ mt: 4 }}>No events found.</Typography>
+      )}
       <Grid container spacing={3}>
         {events.map(event => (
           <Grid item xs={12} sm={6} key={event._id}>
@@ -125,7 +168,6 @@ function EventFeed() {
                 </CardContent>
                 <CardActions>
                   {user ? (
-                    // Open modal on register click
                     <Button onClick={() => handleOpenRegistrationModal(event)} disabled={registering === event._id} variant="contained" size="small">
                       {registering === event._id ? 'Processing...' : 'Register'}
                     </Button>
@@ -167,8 +209,6 @@ function EventFeed() {
               Submit Registration
             </Button>
           </Box>
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-          {/* Success message is shown outside the modal for now, can be changed */}
         </Box>
       </Modal>
     </Box>

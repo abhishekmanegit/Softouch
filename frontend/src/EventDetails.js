@@ -1,27 +1,27 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
-import { Typography, Box, Card, CardContent, CircularProgress, Alert, List, ListItem, ListItemText, Button, Paper } from '@mui/material';
+import { Typography, Box, CircularProgress, List, ListItem, ListItemText, Button, Paper } from '@mui/material';
+import { SnackbarContext } from './SnackbarContext';
 
 function EventDetails() {
   const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { user, token } = useContext(AuthContext);
+  const { showSnackbar } = useContext(SnackbarContext);
   const [updatingStatus, setUpdatingStatus] = useState(null);
 
   useEffect(() => {
     async function fetchEvent() {
       setLoading(true);
-      setError('');
       try {
         const res = await fetch(`http://localhost:5000/api/events/${id}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to fetch event');
         setEvent(data);
       } catch (err) {
-        setError(err.message);
+        showSnackbar(err.message, 'error');
       } finally {
         setLoading(false);
       }
@@ -29,14 +29,14 @@ function EventDetails() {
     if (id) {
       fetchEvent();
     }
-  }, [id]);
+  }, [id, showSnackbar]);
 
   const handleUpdateStatus = async (registrationId, status) => {
     if (!user || !event || event.createdBy._id !== user.id) {
-      setError('Not authorized.');
+      showSnackbar('Not authorized to update registration status.', 'error');
       return;
     }
-    setUpdatingStatus(registrationId); // Indicate which registration is being updated
+    setUpdatingStatus(registrationId);
 
     try {
       const res = await fetch(`http://localhost:5000/api/events/${event._id}/registrations/${registrationId}/status`, {
@@ -58,19 +58,18 @@ function EventDetails() {
           reg._id === registrationId ? { ...reg, status: data.registration.status } : reg
         ),
       }));
+      showSnackbar(`Registration ${status} successfully!`, 'success');
 
     } catch (err) {
-      setError(err.message);
+      showSnackbar(err.message, 'error');
     } finally {
       setUpdatingStatus(null);
     }
   };
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
-  if (error) return <Alert severity="error" sx={{ mt: 4 }}>{error}</Alert>;
-  if (!event) return <Alert severity="info" sx={{ mt: 4 }}>Event not found.</Alert>;
+  if (!event) return <Typography variant="h6" sx={{ mt: 4 }}>Event not found.</Typography>;
 
-  // Check if the logged-in user is the creator of the event
   const isOrganizer = user && event.createdBy && event.createdBy._id === user.id;
 
   return (
@@ -111,7 +110,7 @@ function EventDetails() {
                       }
                     />
                   </ListItem>
-                  {registration.status === 'pending' && ( // Only show buttons for pending registrations
+                  {registration.status === 'pending' && (
                     <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
                       <Button
                         variant="contained"

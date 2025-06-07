@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Paper, Typography, Alert, Box } from '@mui/material';
+import { TextField, Button, Paper, Typography, Box } from '@mui/material';
+import { SnackbarContext } from './SnackbarContext';
 
 function Signup() {
   const [name, setName] = useState('');
@@ -9,13 +10,12 @@ function Signup() {
   const [password, setPassword] = useState('');
   const [skills, setSkills] = useState('');
   const [location, setLocation] = useState('');
-  const [error, setError] = useState('');
   const { login } = useContext(AuthContext);
+  const { showSnackbar } = useContext(SnackbarContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
@@ -24,18 +24,20 @@ function Signup() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Signup failed');
-      // Auto-login after signup
+      showSnackbar('Registration successful! Attempting to log in...', 'info');
+
       const loginRes = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       const loginData = await loginRes.json();
-      if (!loginRes.ok) throw new Error(loginData.message || 'Login failed');
+      if (!loginRes.ok) throw new Error(loginData.message || 'Login failed after signup');
       login(loginData.user, loginData.token);
+      showSnackbar('Login successful!', 'success');
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      showSnackbar(err.message, 'error');
     }
   };
 
@@ -50,7 +52,6 @@ function Signup() {
         <TextField label="Location" value={location} onChange={e => setLocation(e.target.value)} fullWidth margin="normal" />
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>Sign Up</Button>
       </Box>
-      {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
     </Paper>
   );
 }

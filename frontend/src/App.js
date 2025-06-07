@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { AuthProvider, AuthContext } from './AuthContext';
+import { SnackbarProvider } from './SnackbarContext';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './Login';
 import Signup from './Signup';
@@ -51,11 +52,11 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <AuthProvider>
-        <Router>
-          <Navbar />
-          <Container maxWidth="md" sx={{ mt: 4 }}>
-            <Box sx={{ mt: 4 }}>
+      <SnackbarProvider>
+        <AuthProvider>
+          <Router>
+            <Navbar />
+            <Container maxWidth="md" sx={{ mt: 4 }}>
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
@@ -65,10 +66,10 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/" element={<EventFeed />} />
               </Routes>
-            </Box>
-          </Container>
-        </Router>
-      </AuthProvider>
+            </Container>
+          </Router>
+        </AuthProvider>
+      </SnackbarProvider>
     </ThemeProvider>
   );
 }
