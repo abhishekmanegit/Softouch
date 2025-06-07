@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose'); // Import mongoose for ObjectId
+const Notification = require('../models/Notification');
 
 const router = express.Router();
 
@@ -214,6 +215,17 @@ router.put('/:eventId/registrations/:registrationId/status', auth, async (req, r
 
     registration.status = status;
     await event.save();
+
+    // Create a notification for the user whose registration status was updated
+    const notificationMessage = `Your registration for '${event.title}' has been ${status}.`;
+    const notification = new Notification({
+      recipient: registration.userId,
+      sender: req.user.userId,
+      type: 'registration_status',
+      message: notificationMessage,
+      event: event._id,
+    });
+    await notification.save();
 
     res.json({ message: 'Registration status updated successfully', registration });
 

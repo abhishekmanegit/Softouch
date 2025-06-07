@@ -1,8 +1,36 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
-import { Paper, Typography, Box, Button, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Chip, CircularProgress } from '@mui/material';
+import { Paper, Typography, Box, Button, Avatar, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Chip, CircularProgress, FormControl, InputLabel, Select, MenuItem, OutlinedInput } from '@mui/material';
 import { SnackbarContext } from './SnackbarContext';
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+const eventCategories = [
+  'Webinar',
+  'Workshop',
+  'Conference',
+  'Hackathon',
+  'Networking Event',
+  'Seminar',
+  'Meetup',
+  'Bootcamp',
+  'Panel Discussion',
+  'Product Launch',
+  'Exhibition',
+  'Job Fair',
+  'Competition',
+  'Training'
+];
 
 function Profile() {
   const { user, token, updateUser } = useContext(AuthContext);
@@ -19,6 +47,7 @@ function Profile() {
     email: '',
     skills: '',
     location: '',
+    preferredCategories: [],
     profilePicture: '',
     headline: '',
     experience: '[]',
@@ -68,6 +97,7 @@ function Profile() {
             email: data.email || '',
             skills: data.skills?.join(', ') || '',
             location: data.location || '',
+            preferredCategories: data.preferredCategories || [],
             profilePicture: data.profilePicture || '',
             headline: data.headline || '',
             experience: JSON.stringify(data.experience || [], null, 2),
@@ -94,6 +124,7 @@ function Profile() {
         email: profileUser.email || '',
         skills: profileUser.skills?.join(', ') || '',
         location: profileUser.location || '',
+        preferredCategories: profileUser.preferredCategories || [],
         profilePicture: profileUser.profilePicture || '',
         headline: profileUser.headline || '',
         experience: JSON.stringify(profileUser.experience || [], null, 2),
@@ -113,6 +144,10 @@ function Profile() {
     setEditFormData({ ...editFormData, [name]: value });
   };
 
+  const handleCategoryChange = (event) => {
+    setEditFormData({ ...editFormData, preferredCategories: event.target.value });
+  };
+
   const handleSaveProfile = async () => {
     try {
       const parsedExperience = JSON.parse(editFormData.experience);
@@ -122,6 +157,7 @@ function Profile() {
       const updatedProfile = {
         ...editFormData,
         skills: editFormData.skills.split(',').map(s => s.trim()).filter(s => s),
+        preferredCategories: editFormData.preferredCategories,
         experience: parsedExperience,
         education: parsedEducation,
         projects: parsedProjects,
@@ -221,6 +257,17 @@ function Profile() {
         </Box>
       )}
 
+      {profileUser.preferredCategories && profileUser.preferredCategories.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="h6" sx={{ mb: 1 }}>Preferred Categories</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {profileUser.preferredCategories.map((category, index) => (
+              <Chip key={index} label={category} variant="outlined" />
+            ))}
+          </Box>
+        </Box>
+      )}
+
       {profileUser.experience && profileUser.experience.length > 0 && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="h6" sx={{ mb: 1 }}>Experience</Typography>
@@ -256,7 +303,11 @@ function Profile() {
               <Typography variant="body2">{proj.description}</Typography>
               {proj.link && <Typography variant="body2"><a href={proj.link} target="_blank" rel="noopener noreferrer">View Project</a></Typography>}
               {proj.technologies && proj.technologies.length > 0 && (
-                <Typography variant="body2" color="text.secondary">Tech: {proj.technologies.join(', ')}</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                  {proj.technologies.map((tech, techIndex) => (
+                    <Chip key={techIndex} label={tech} size="small" />
+                  ))}
+                </Box>
               )}
             </Box>
           ))}
@@ -264,106 +315,138 @@ function Profile() {
       )}
 
       {isOwnProfile && (
-        <Button variant="contained" color="primary" onClick={handleOpenEditModal} sx={{ mt: 2 }}>
+        <Button variant="contained" onClick={handleOpenEditModal} sx={{ mt: 2 }}>
           Edit Profile
         </Button>
       )}
 
-      <Dialog open={openEditModal} onClose={handleCloseEditModal} fullWidth maxWidth="sm">
+      <Dialog open={openEditModal} onClose={handleCloseEditModal} fullWidth maxWidth="md">
         <DialogTitle>Edit Profile</DialogTitle>
         <DialogContent>
           <TextField
-            margin="normal"
+            margin="dense"
             label="Name"
+            type="text"
+            fullWidth
+            variant="outlined"
             name="name"
             value={editFormData.name}
             onChange={handleChange}
-            fullWidth
           />
           <TextField
-            margin="normal"
+            margin="dense"
             label="Email"
-            name="email"
             type="email"
+            fullWidth
+            variant="outlined"
+            name="email"
             value={editFormData.email}
             onChange={handleChange}
-            fullWidth
-            disabled
           />
           <TextField
-            margin="normal"
+            margin="dense"
+            label="Profile Picture URL"
+            type="url"
+            fullWidth
+            variant="outlined"
+            name="profilePicture"
+            value={editFormData.profilePicture}
+            onChange={handleChange}
+          />
+          <TextField
+            margin="dense"
             label="Headline"
+            type="text"
+            fullWidth
+            variant="outlined"
             name="headline"
             value={editFormData.headline}
             onChange={handleChange}
-            fullWidth
-            helperText="A short, professional headline (e.g., 'Software Engineer at Google')"
           />
           <TextField
-            margin="normal"
-            label="Profile Picture URL"
-            name="profilePicture"
-            type="url"
-            value={editFormData.profilePicture}
-            onChange={handleChange}
-            fullWidth
-            helperText="Link to your profile image"
-          />
-          <TextField
-            margin="normal"
+            margin="dense"
             label="Skills (comma separated)"
+            type="text"
+            fullWidth
+            variant="outlined"
             name="skills"
             value={editFormData.skills}
             onChange={handleChange}
-            fullWidth
-            helperText="e.g., React, Node.js, MongoDB, Python"
+            helperText="e.g., React, Node.js, MongoDB"
           />
           <TextField
-            margin="normal"
+            margin="dense"
             label="Location"
+            type="text"
+            fullWidth
+            variant="outlined"
             name="location"
             value={editFormData.location}
             onChange={handleChange}
-            fullWidth
           />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="preferred-categories-label">Preferred Categories</InputLabel>
+            <Select
+              labelId="preferred-categories-label"
+              id="preferred-categories"
+              multiple
+              value={editFormData.preferredCategories}
+              onChange={handleCategoryChange}
+              input={<OutlinedInput id="select-preferred-chip" label="Preferred Categories" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </Box>
+              )}
+              MenuProps={MenuProps}
+            >
+              {eventCategories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
-            margin="normal"
-            label="Experience (JSON Array)"
+            margin="dense"
+            label="Experience (JSON array)"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
             name="experience"
             value={editFormData.experience}
             onChange={handleChange}
+            helperText="e.g., [{\"title\": \"Software Engineer\", \"company\": \"Tech Corp\"}]"
+          />
+          <TextField
+            margin="dense"
+            label="Education (JSON array)"
+            type="text"
             fullWidth
             multiline
             rows={4}
-            helperText={
-              `Enter experience as a JSON array. Example: ${JSON.stringify([{"title":"Software Engineer","company":"Tech Corp","from":"2020-01-01"}])}`
-            }
-          />
-          <TextField
-            margin="normal"
-            label="Education (JSON Array)"
+            variant="outlined"
             name="education"
             value={editFormData.education}
             onChange={handleChange}
+            helperText="e.g., [{\"school\": \"University A\", \"degree\": \"B.S. Computer Science\"}]"
+          />
+          <TextField
+            margin="dense"
+            label="Projects (JSON array)"
+            type="text"
             fullWidth
             multiline
             rows={4}
-            helperText={
-              `Enter education as a JSON array. Example: ${JSON.stringify([{"school":"MIT","degree":"B.S. Computer Science"}])}`
-            }
-          />
-          <TextField
-            margin="normal"
-            label="Projects (JSON Array)"
+            variant="outlined"
             name="projects"
             value={editFormData.projects}
             onChange={handleChange}
-            fullWidth
-            multiline
-            rows={4}
-            helperText={
-              `Enter projects as a JSON array. Example: ${JSON.stringify([{"title":"My App","description":"A cool app","link":"https://myapp.com","technologies":["React","Node"]}])}`
-            }
+            helperText="e.g., [{\"title\": \"Project X\", \"description\": \"A cool project\"}]"
           />
         </DialogContent>
         <DialogActions>
@@ -375,4 +458,4 @@ function Profile() {
   );
 }
 
-export default Profile; 
+export default Profile;

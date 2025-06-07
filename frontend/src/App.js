@@ -12,11 +12,15 @@ import Dashboard from './Dashboard';
 import Connections from './Connections';
 import CreatePost from './CreatePost';
 import PostFeed from './PostFeed';
-import { AppBar, Toolbar, Button, Container, Typography, Box } from '@mui/material';
+import Notifications from './Notifications';
+import { AppBar, Toolbar, Button, Container, Typography, Box, IconButton, Badge } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 function Navbar() {
   const { user, logout } = useContext(AuthContext);
+  const unreadNotificationsCount = 0;
+
   return (
     <AppBar position="static" color="primary">
       <Toolbar>
@@ -27,6 +31,13 @@ function Navbar() {
         {user && <Button color="inherit" component={Link} to="/create-post">Create Post</Button>}
         {user && <Button color="inherit" component={Link} to="/dashboard">Dashboard</Button>}
         {user && <Button color="inherit" component={Link} to="/connections">My Network</Button>}
+        {user && (
+          <IconButton color="inherit" component={Link} to="/notifications">
+            <Badge badgeContent={unreadNotificationsCount} color="secondary">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+        )}
         {user ? (
           <>
             <Button color="inherit" component={Link} to="/profile">Profile</Button>
@@ -72,6 +83,7 @@ function App() {
                 <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/connections" element={<Connections />} />
+                <Route path="/notifications" element={<Notifications />} />
                 <Route path="/" element={<PostFeed />} />
               </Routes>
             </Container>
