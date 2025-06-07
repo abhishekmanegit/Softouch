@@ -109,6 +109,40 @@ function EventDetails() {
     }
   };
 
+  const handleCheckIn = async (registrationId) => {
+    if (!user || !event || event.createdBy._id !== user.id) {
+      showSnackbar('Not authorized to check in users.', 'error');
+      return;
+    }
+    setUpdatingStatus(registrationId);
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/events/${event._id}/checkin/${registrationId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to check in user');
+
+      setEvent(prevEvent => ({
+        ...prevEvent,
+        registeredUsers: prevEvent.registeredUsers.map(reg =>
+          reg._id === registrationId ? { ...reg, checkedIn: true } : reg
+        ),
+      }));
+      showSnackbar('User checked in successfully!', 'success');
+
+    } catch (err) {
+      showSnackbar(err.message, 'error');
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
   const handleOpenReminderModal = () => {
     if (!user) {
       showSnackbar('You must be logged in to set a reminder.', 'warning');
@@ -290,6 +324,17 @@ function EventDetails() {
                         {updatingStatus === registration._id ? 'Rejecting...' : 'Reject'}
                       </Button>
                     </Box>
+                  )}
+                  {registration.status === 'approved' && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      sx={{ ml: 1 }}
+                      onClick={() => handleCheckIn(registration._id)}
+                      disabled={updatingStatus === registration._id || registration.checkedIn}
+                    >
+                      {registration.checkedIn ? 'Checked In' : (updatingStatus === registration._id ? <CircularProgress size={24} /> : 'Check In')}
+                    </Button>
                   )}
                 </Paper>
               ))}

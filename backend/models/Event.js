@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const registrationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  checkedIn: { type: Boolean, default: false },
   registrationDetails: { // Example fields, can be expanded
     contact: { type: String },
     // Add more fields as needed, e.g., statementOfInterest, resumeLink, etc.

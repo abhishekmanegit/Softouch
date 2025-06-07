@@ -219,6 +219,33 @@ router.put('/:eventId/registrations/:registrationId/status', auth, async (req, r
   }
 });
 
-// TODO: Add endpoint for organizers to approve/reject registrations
+// Check-in a registered user (Organizer Only)
+router.put('/:eventId/checkin/:registrationId', auth, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Check if the logged-in user is the event creator
+    if (event.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to check-in users for this event' });
+    }
+
+    const registration = event.registeredUsers.id(req.params.registrationId);
+    if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
+    if (registration.status !== 'approved') {
+      return res.status(400).json({ message: 'Only approved users can be checked in' });
+    }
+
+    registration.checkedIn = true;
+    await event.save();
+
+    res.json({ message: 'User checked in successfully', registration });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router; 
